@@ -19,14 +19,7 @@ class Sudoku:
     def place(self, value: int, x: int, y: int) -> None:
         """Place value at x,y."""
         row = self._grid[y]
-        new_row = ""
-
-        for i in range(9):
-            if i == x:
-                new_row += str(value)
-            else:
-                new_row += row[i]
-
+        new_row = row[:x] + f"{value}" + row[x + 1:]
         self._grid[y] = new_row
 
     def unplace(self, x: int, y: int) -> None:
@@ -37,13 +30,8 @@ class Sudoku:
 
     def value_at(self, x: int, y: int) -> int:
         """Returns the value at x,y."""
-        value = -1
-
-        for i in range(9):
-            for j in range(9):
-                if i == x and j == y:
-                    row = self._grid[y]
-                    value = int(row[x])
+        
+        value = int((self._grid[y])[x])
 
         return value
 
@@ -51,26 +39,18 @@ class Sudoku:
         """Returns all possible values (options) at x,y."""
         options = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-        # Remove all values from the row
-        for value in self.row_values(y):
-            if value in options:
-                options.remove(value)
-
-        # Remove all values from the column
-        for value in self.column_values(x):
-            if value in options:
-                options.remove(value)
-
-        # Get the index of the block based from x,y
         block_index = (y // 3) * 3 + x // 3
 
-        # Remove all values from the block
-        for value in self.block_values(block_index):
+        values = self.row_values(y) + self.column_values(x) + self.block_values(block_index)
+        values = list(set(values))
+        
+        # Remove all values from the row
+        for value in values:
             if value in options:
                 options.remove(value)
 
         return options
-
+        
     def next_empty_index(self) -> tuple[int, int]:
         """
         Returns the next index (x,y) that is empty (value 0).
@@ -129,14 +109,21 @@ class Sudoku:
         """
         values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
+        values_column = []
+        values_row = []
+
+        for i in range(9):
+            for j in range(9):
+                    values_column.append(self.value_at(i, j))
+                    values_row.append(self.value_at(j, i))
+                    
         result = True
+
+        column_and_row = list(set(values_column + values_row))
 
         for i in range(9):
             for value in values:
-                if value not in self.column_values(i):
-                    result = False
-
-                if value not in self.row_values(i):
+                if value not in column_and_row:
                     result = False
 
                 if value not in self.block_values(i):
